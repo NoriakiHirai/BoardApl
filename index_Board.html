@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Web掲示板</title>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+  <link rel="stylesheet" href="CSS/ButtounStyle.css">
+  <link rel="stylesheet" href="CSS/ModalStyle.css">
+  <script type="text/javascript" src="js/common.js"></script>
+  <script type="text/javascript" src="js/indexBoard.js"></script>
+  <script type="text/javascript" src="js/modal.js"></script>
+</head>
+<body onload="RefreshThreadList()"; />
+	<h1>Web掲示板</h1>
+	<h2>スレッド一覧</h2>
+  <hr style="border:0;border-top:1px solid gray;">
+  <table id="ThreadTBL" style="table-layout:fixed;" >
+    <thead id="ThreadTitle" style="table-layout:fixed;">
+      <tr>
+        <th align="left" width="50">No.</th>
+        <th align="left" width="200">スレッド名</th>
+        <th align="left" width="50">投稿数</th>
+      </tr>
+    </thread>
+    <tbody id="ThreadBody" style="table-layout:fixed;"  >
+      <tr>
+        <td>number</td>
+        <td>title</td>
+        <td>counts</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    <input type="button" value="読み込み" onclick="RefreshThreadList()"; />
+  </p>
+  <hr style="border:0;border-top:1px solid gray;">
+  <footer>
+  <h3>新規スレッド作成</h3>
+  <div id="modal-content">
+    <!-- モーダルウィンドウコンテンツ開始 -->
+    <p>
+      <p>新しく追加するスレッド名を以下に入力し、スレッド作成ボタンを押下してください。<br>
+      ※すでに存在するスレッド名では、新しいスレッドを作成できません。</p>
+      <textarea id="InputThreadName" rows="1" cols="40" name="ThreadNameArea"></textarea>
+      <nav>
+        <ul>
+          <li><a id="modal-close" type="button" class="button-link" onclick="AddThread()"; />スレッド作成</a></li>
+          <li><a id="modal-close" type="button" class="button-link">閉じる</a></li>
+        </ul>
+      </nav>
+    </p>
+    <!-- モーダルウィンドウコンテンツ終了 -->
+  </div>
+    <p>
+      <nav>
+        <ul>
+          <li><a id="modal-open" class="button-link">作成</a></li>
+      </nav>
+    </p>
+</body>
+</html>

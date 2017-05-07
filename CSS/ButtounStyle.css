@@ -1,0 +1,54 @@
+@charset "UTF-8";
+
+nav ul {
+  overflow: hidden;
+  margin: 0 0 10px 0;
+  border: 1px;
+  padding: 0;
+  line-height: 1.0;
+}
+nav li, nav a {
+  display: block;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  box-shadow: inset 1px 1px 0 #fff, 1px 1px 3px rgba(0, 0, 0, 0.1) ;
+  background-color: #CCCCCC;
+  padding: 0;
+  line-height: 1.0;
+}
+nav li {
+  float: left;
+  border-right: 1px solid #ddd;
+  margin-left: 1em;
+}
+nav a {
+  padding: 8px 15px;
+  font-weight: bold;
+  text-decoration: none;
+  text-shadow: 1px 1px 0 #fff;
+}
+nav a:hover {
+  background-color: snow;
+}
+
+.pre30button,
+.rear30button {
+  text-align: left;
+  float: left;
+  width: 100px;
+  margin-right: auto;
+}
+
+.pre30button form,
+.rear30button form {
+  width: 100%;
+  text-align: left;
+}
+
+.form-container:after {
+  clear: both;
+  content: "";
+  overflow: hidden;
+  clear: both;
+}
