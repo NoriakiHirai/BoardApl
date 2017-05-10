@@ -27,6 +27,7 @@ type Thread struct {
 
 // 投稿情報(キー：スレッド名⁺メッセージ)
 type ContributionInfo struct {
+	MsgNumber	string `json:"msgnumber"`
 	UserID		string `json:"userID"`
 	Message		string `json:"message"`
 }
@@ -34,18 +35,17 @@ type ContributionInfo struct {
 // スレッド情報の初期値を設定
 func (cc *BoardChaincode) Init (stub *shim.ChaincodeStub, function string, args []string)([]byte, error) {
 	var totalThread TotalThread
-	//var threadNames ThreadName
-	//var threads Thread
+	var threadName string
 
 	totalThread.Counts = 0
 	defaultThreadName := [4]string{"News", "Economics", "Sports", "Culture"}
 
 	// すでにスレッドが作成されていないか、確認する
-	valAsbytes, _ := stub.GetState(defaultThreadName[0])
+	valAsbytes, _ := stub.GetState("0")
 	if valAsbytes == nil {
 		for i :=0; i < len(defaultThreadName); i++ {
-			threadName := defaultThreadName[i]
-			return cc.addThread(stub, threadName)
+			threadName = defaultThreadName[i]
+			cc.addThread(stub, threadName)
 		}
 	} else if valAsbytes != nil {
 		//初期スレッドが登録されていれば、何もしない
@@ -56,19 +56,21 @@ func (cc *BoardChaincode) Init (stub *shim.ChaincodeStub, function string, args 
 }
 
 func (cc *BoardChaincode) Invoke(stub *shim.ChaincodeStub, function string, args [] string) ([]byte, error) {
-	threadID := args[0]
-	threadName := args[1]
-	userID := args[4]
-	msg := args[5]
 
 	//投稿処理実行
 	if function == "contribution" {
-		return cc.contribution(stub, threadID, threadName, userID, msg)
+		threadName := args[0]
+		threadID := args[1]
+		userID := args[4]
+		msg := args[5]
 
-		//スレッド追加
+		cc.contribution(stub, threadID, threadName, userID, msg)
+		return nil, nil
+
+	//スレッド追加
 	} else if function == "AddThread" {
+		threadName := args[0]
 		cc.addThread(stub, threadName)
-
 		return nil, nil
 	}
 
@@ -77,17 +79,17 @@ func (cc *BoardChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 
 // スレッド情報および投稿情報を参照
 func (cc *BoardChaincode) Query (stub *shim.ChaincodeStub, function string, args []string)([]byte, error) {
-	threadID := args[0]
-	threadName := args[1]
-	firstMsgNum := args[2]
-	endMsgNum := args[3]
-
 	// スレッド一覧画面の更新
 	if function == "GetThread" {
 		return cc.getThread(stub)
 
 	// 個別スレッド画面の更新
 	} else if function == "GetContribution" {
+		threadName := args[0]
+		threadID := args[1]
+		firstMsgNum := args[2]
+		endMsgNum := args[3]
+
 		// 投稿情報を取得
 		return cc.getContribution(stub, threadID, threadName, firstMsgNum, endMsgNum)
 	}
@@ -97,44 +99,31 @@ func (cc *BoardChaincode) Query (stub *shim.ChaincodeStub, function string, args
 
 // スレッド追加
 func (cc *BoardChaincode) addThread(stub *shim.ChaincodeStub, threadName string) ([]byte, error) {
-	//var threadNames ThreadName
 	var threads Thread
-	var tmpBytesSet [][]byte
+	var tmpBytesSet [2][]byte
 
-	// ワールドステートのインデックスを作成
-	//threadName := args[0]
+	// 登録されているスレッド総数を取得
+	tmptotalThreadBytes, _ := stub.GetState("TotalThread")
 
-	// すでにスレッドが作成されていないか、確認する
-	valAsbytes, _ := stub.GetState(threadName)
-	if valAsbytes == nil {
-		// 登録されているスレッド総数を取得
-		tmptotalThreadBytes, _ := stub.GetState("TotalThread")
+	// 取得したバイト形式の情報をTotalThread型に変換
+	totalThread := TotalThread{}
+	json.Unmarshal(tmptotalThreadBytes, &totalThread)
 
-		// 取得したバイト形式の情報をTotalThread型に変換
-		totalThread := TotalThread{}
-		json.Unmarshal(tmptotalThreadBytes, &totalThread)
+	// スレッド情報を作成
+	totalThread.Counts++
+	threadID := strconv.Itoa(totalThread.Counts)
+	threads = Thread{ThreadID: threadID, ThreadName: threadName, MsgNumber: "0"}
 
-		// スレッド情報を作成
-		totalThread.Counts++
-		threadID := strconv.Itoa(totalThread.Counts)
-		threads = Thread{ThreadID: threadID, ThreadName: threadName, MsgNumber: "0"}
+	// スレッド情報をワールドステートに追加
+	// バイト形式に変換
+	tmpBytesSet[0], _ = json.Marshal(totalThread)
+	tmpBytesSet[1], _ = json.Marshal(threads)
 
-		// スレッド情報をワールドステートに追加
-		// バイト形式に変換
-		tmpBytesSet[0], _ = json.Marshal(totalThread)
-		tmpBytesSet[1], _ = json.Marshal(threads)
+	//strTotalcnt := strconv.Itoa(totalThread.Counts -1 )
 
-		strTotalcnt := strconv.Itoa(totalThread.Counts -1 )
-
-		// ワールドステートに追加
-		stub.PutState("TotalThread", tmpBytesSet[0])
-		stub.PutState(strTotalcnt, tmpBytesSet[1])
-
-	} else if valAsbytes != nil {
-		//スレッドが登録されていれば、メッセージを表示する
-		jsonResp := "[{Thread Exists.}]"
-		return json.Marshal(jsonResp)
-	}
+	// ワールドステートに追加
+	stub.PutState("TotalThread", tmpBytesSet[0])
+	stub.PutState(threadID, tmpBytesSet[1])
 
 	return nil, nil
 }
@@ -144,7 +133,7 @@ func (cc *BoardChaincode) contribution(stub *shim.ChaincodeStub, threadID string
 userID string, msg string) ([]byte, error) {
 	var cntinfo ContributionInfo
 	var threads Thread
-	var tmpBytesSet [][]byte
+	var tmpBytesSet [2][]byte
 
 	// ワールドステートから最新のメッセージNoを取得する
 	threadJson, _ := stub.GetState(threadID)
@@ -174,7 +163,7 @@ userID string, msg string) ([]byte, error) {
 	threads = Thread{ThreadID: strmsgNum, ThreadName: threadName, MsgNumber: strmsgNum}
 
 	// 投稿情報を作成
-	cntinfo = ContributionInfo{UserID: userID, Message: msg}
+	cntinfo = ContributionInfo{MsgNumber: strmsgNum,UserID: userID, Message: msg}
 
 	// バイト形式に変換
 	tmpBytesSet[0], _ = json.Marshal(threads)
@@ -200,11 +189,11 @@ func (cc *BoardChaincode) getThread (stub *shim.ChaincodeStub)([]byte, error) {
 	//スレッド情報を格納するスライスを定義
 	threads := make([]Thread, totalThread.Counts)
 
-	for i :=0; i < totalThread.Counts; i++ {
+	for i :=1; i <= totalThread.Counts; i++ {
 		//スレッド情報を取得する
 		tmpthreadBytes, _ := stub.GetState(strconv.Itoa(i))
-		threads[i] = Thread{}
-		json.Unmarshal(tmpthreadBytes, &threads[i])
+		threads[i-1] = Thread{}
+		json.Unmarshal(tmpthreadBytes, &threads[i-1])
 	}
 
 	// json形式に変換
@@ -232,6 +221,10 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 
 	msgNumber := threads.MsgNumber
 	intmsgNumber, _ := strconv.Atoi(msgNumber)
+	fmt.Println(msgNumber)
+	fmt.Println(msgFrom)
+	fmt.Println(msgTo)
+	fmt.Println(intmsgNumber)
 
 	// 1件も投稿がない場合、処理終了
 	if msgNumber == "0" {
@@ -256,8 +249,11 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 		} else {
 			// if 0 < 取得終了位置 <= 最新投稿No
 			if msgTo < intmsgNumber {
-				// 取得開始位置,取得終了位置は引数のまま
-
+				// if 取得終了位置 = 0 (最新情報取得) ⇒ 取得終了位置 = 最新投稿No
+				// else 取得終了位置 ⇒ そのまま
+				if msgTo == 0 {
+					msgTo = intmsgNumber
+				}
 			// if 取得終了位置 >= 最新投稿No
 			} else {
 				// 取得終了位置 = 最新投稿No
@@ -279,7 +275,7 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 		// 任意の位置の投稿情報を取得する
 		for i := msgFrom; i <= msgTo; i++ {
 			// ワールドステートのインデックスを生成
-			cntIndex := threadName + strconv.Itoa(i)
+			cntIndex := threadName + strconv.Itoa(i+1)
 
 			// ワールドステートから投稿情報を取得
 			cntJson, _ := stub.GetState(cntIndex)
