@@ -221,10 +221,10 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 
 	msgNumber := threads.MsgNumber
 	intmsgNumber, _ := strconv.Atoi(msgNumber)
-	fmt.Println(msgNumber)
-	fmt.Println(msgFrom)
-	fmt.Println(msgTo)
-	fmt.Println(intmsgNumber)
+	//fmt.Println(msgNumber)
+	//fmt.Println(msgFrom)
+	//fmt.Println(msgTo)
+	//fmt.Println(intmsgNumber)
 
 	// 1件も投稿がない場合、処理終了
 	if msgNumber == "0" {
@@ -239,32 +239,44 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 			//取得終了位置に最新の投稿Noを設定
 			msgTo = intmsgNumber
 			// if 最新投稿No > 30 then 取得開始位置 = msgTo - 29
-			// if 最新投稿No > 30 else 取得開始位置 = 1
+			// if 最新投稿No > 30 else 取得開始位置 = 0
 			if intmsgNumber > 30 {
-				msgFrom = msgTo - 29
+				msgFrom = msgTo - 30
 			} else {
-				msgFrom = 1
+				msgFrom = 0
 			}
 		// if  取得開始位置 <= 最新の投稿No
 		} else {
 			// if 0 < 取得終了位置 <= 最新投稿No
 			if msgTo < intmsgNumber {
-				// if 取得終了位置 = 0 (最新情報取得) ⇒ 取得終了位置 = 最新投稿No
+				// 取得開始位置 = 取得開始位置 - 1
+				msgFrom = msgFrom - 1
+
+				// if 取得終了位置 = 0 (最新情報取得) then 取得終了位置 = 最新投稿No
 				// else 取得終了位置 ⇒ そのまま
 				if msgTo == 0 {
 					msgTo = intmsgNumber
+
+					// 取得開始位置 = 最新投稿No - 30
+					msgFrom = msgTo - 30
+
+					// 取得開始位置 < 0 then 取得開始位置 = 0
+					if msgFrom < 0 {
+						msgFrom = 0
+					}
 				}
+
 			// if 取得終了位置 >= 最新投稿No
 			} else {
 				// 取得終了位置 = 最新投稿No
 				msgTo = intmsgNumber
 
 				// if 0 < 最新投稿No - 30 then 取得開始位置 = 最新投稿No - 29
-				// if 最新投稿No - 30 <= 0 then 取得開始位置 = 1
+				// if 最新投稿No - 30 <= 0 then 取得開始位置 = 0
 				if intmsgNumber > 30 {
-					msgFrom = intmsgNumber - 29
+					msgFrom = intmsgNumber - 30
 				} else {
-					msgFrom = 1
+					msgFrom = 0
 				}
 			}
 		}
@@ -273,7 +285,7 @@ firstMsgNum string, endMsgNum string)([]byte, error) {
 		index := 0
 
 		// 任意の位置の投稿情報を取得する
-		for i := msgFrom; i <= msgTo; i++ {
+		for i := msgFrom; i < msgTo; i++ {
 			// ワールドステートのインデックスを生成
 			cntIndex := threadName + strconv.Itoa(i+1)
 
