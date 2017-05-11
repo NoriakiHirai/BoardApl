@@ -106,45 +106,7 @@ function getContribution(funcname, startmsgnum, endmsgnum) {
   executeJsonRpc(url, JSONdata,
     function success(data) {
       contributionList = JSON.parse(data.result.message);
-      var getstartmsgnum = 0;
-      var getendmsgnum = 0;
-      console.log(contributionList);
-      if (contributionList.toString() != "[{No Contribution.}]") {
-        //投稿情報の開始番号を設定
-        getstartmsgnum = contributionList[0].msgnumber;
-
-        for (var i = 0; i < contributionList.length; i++) {
-          // スレッド情報の取得
-          var contribution = contributionList[i];
-          if (contribution.userID == "") {
-            break;
-          }
-          //### HTML編集 table行の追加、編集 ここから ###
-          var temp = "";
-          temp += "<table>";
-          temp += "<thead>";
-          temp += "<tr>";
-          temp += "<th align=\"left\" width=\"30\">" + contribution.msgnumber + "</th>";
-          temp += "<th align=\"left\">" + contribution.userID + "</th>";
-          temp += "</tr>";
-          temp += "</thead>";
-          temp += "</table>";
-          temp += "<table width=\"750\" style=\"table-layout:fixed;margin-left:10px;\">";
-          temp += "<tr>";
-          temp += "<td style=\"word-wrap:break-word;\" align=\"left\">" + contribution.message + "</td>";
-          temp += "</tr><tr></tr>";
-          temp += "</table>";
-
-          $("#BoardTable").append(temp);
-          //### HTML編集 table行の追加、編集 ここまで ###
-          getendmsgnum = contribution.msgnumber;
-        }
-      } else if (contributionList.toString() == "[{No Contribution.}]") {
-        window.alert("まだ1件も投稿されていません。\n投稿をお願いします。");
-      }
-      $(".StartMsgNum").text(getstartmsgnum);
-      $(".EndMsgNum").text(getendmsgnum);
-      console.log("contributionList Refresh Success");
+      makeContributionList(contributionList);
     },
     function error(data) {
       console.log("contributionList Refresh Error");
@@ -188,4 +150,46 @@ function createJSONdataForBoardApp(method, functionName, threadID, threadName,
       };
     }
   return JSONdata;
+}
+
+function makeContributionList(contributionList) {
+  var getstartmsgnum = 0;
+  var getendmsgnum = 0;
+  console.log(contributionList);
+  if (contributionList.toString() != "[{No Contribution.}]") {
+    //投稿情報の開始番号を設定
+    getstartmsgnum = contributionList[0].msgnumber;
+
+    for (var i = 0; i < contributionList.length; i++) {
+      // スレッド情報の取得
+      var contribution = contributionList[i];
+      if (contribution.userID == "") {
+        break;
+      }
+      //### HTML編集 table行の追加、編集 ここから ###
+      var temp = "";
+      temp += "<table>";
+      temp += "<thead>";
+      temp += "<tr>";
+      temp += "<th align=\"left\" width=\"30\">" + contribution.msgnumber + "</th>";
+      temp += "<th align=\"left\">" + contribution.userID + "</th>";
+      temp += "</tr>";
+      temp += "</thead>";
+      temp += "</table>";
+      temp += "<table width=\"750\" style=\"table-layout:fixed;margin-left:10px;\">";
+      temp += "<tr>";
+      temp += "<td style=\"word-wrap:break-word;\" align=\"left\">" + contribution.message + "</td>";
+      temp += "</tr><tr></tr>";
+      temp += "</table>";
+
+      $("#BoardTable").append(temp);
+      //### HTML編集 table行の追加、編集 ここまで ###
+      getendmsgnum = contribution.msgnumber;
+    }
+  } else if (contributionList.toString() == "[{No Contribution.}]") {
+    window.alert("まだ1件も投稿されていません。\n投稿をお願いします。");
+  }
+  $(".StartMsgNum").text(getstartmsgnum);
+  $(".EndMsgNum").text(getendmsgnum);
+  console.log("contributionList Refresh Success");
 }
