@@ -2,22 +2,21 @@ var url_host="http://localhost:5000/";
 
 //初期処理
 function init() {
-  var threadName = getThreadName();
+  var threadName = getthreadName();
   $('.ThreadName').text(threadName);
 
   //掲示板更新
-  RefreshBoardLatest();
+  LatestContribution();
 }
 
 //掲示板更新(最新)
-function RefreshBoardLatest() {
-  var funcname = "RefreshBoardLatest";
+function LatestContribution() {
   //投稿情報を読み込む開始位置と終了位置を設定
   //最新の投稿を取得するので、今回は開始位置と終了位置は使用しないため、0を設定する
   var startmsgnum = "0";
   var endmsgnum = "0";
 
-  RefreshBoard(funcname, startmsgnum, endmsgnum);
+  getContribution(funcname, startmsgnum, endmsgnum);
 }
 
 //前の30件を表示させる
@@ -34,46 +33,41 @@ function Pre30Contribution() {
   var startmsgnum = tmpstartmsgnum + '';
   var endmsgnum = tmpendmsgnum + '';
 
-  var funcname = "RefreshBordSelect";
-
-  RefreshBoard(funcname, startmsgnum, endmsgnum);
+  getContribution(funcname, startmsgnum, endmsgnum);
 }
 
 //次の30件を表示させる
 function Rear30Contribution() {
   //投稿情報を読み込む開始位置と終了位置を設定
-  var tmpstartmsgnum = $(".StartMsgNum").text() + 30;
+  var tmpnum = $(".StartMsgNum").text();
+  var tmpstartmsgnum = Number(tmpnum) + 30;
   var tmpendmsgnum = tmpstartmsgnum + 30;
 
   //型変換
   var startmsgnum = tmpstartmsgnum + '';
   var endmsgnum = tmpendmsgnum + '';
 
-  var funcname = "RefreshBordSelect";
-
-  RefreshBoard(funcname, startmsgnum, endmsgnum);
-}
-
-//掲示板更新処理実行
-function RefreshBoard(funcname, startmsgnum, endmsgnum) {
-  //既存の投稿を削除
-  $('#BoardTable').empty();
-
-  var threadName = getThreadName();
-  getContribution(funcname, threadName,  startmsgnum, endmsgnum);
+  getContribution(funcname, startmsgnum, endmsgnum);
 }
 
 //スレッド名取得
-function getThreadName() {
+function getthreadName() {
   //スレッド一覧ページから渡されたスレッド名をタイトルに設定する
   var threadName = window.sessionStorage.getItem(['ThreadName']);
   return threadName;
 }
 
+//スレッドID取得
+function getthreadID() {
+  var getthreadID = window.sessionStorage.getItem(['ThreadId']);
+  return getthreadID;
+}
+
 // 投稿実行
 function Contribution() {
   var url = url_host + "chaincode";
-  //スレッド名を取得
+  //スレッドID+名を取得
+  var threadID = getthreadID();
   var threadName = $(".ThreadName").text();
   //ユーザー名を設定
   var user_name = window.sessionStorage.getItem(['USER_NAME']);
@@ -81,7 +75,8 @@ function Contribution() {
   var message = $('#InputArea').val();
   //改行コードを置換
   message = message.replace("\n", "<br>")
-  var JSONdata = createJSONdataForBoardApp("invoke", "contribution", threadName, "0", "0", user_name, message, 3);
+  var JSONdata = createJSONdataForBoardApp("invoke", "contribution", threadID,
+   threadName, "0", "0", user_name, message, 3);
   executeJsonRpc(url, JSONdata,
     function success(data) {
         console.log("Contribution Success");
@@ -94,16 +89,26 @@ function Contribution() {
   $('#InputArea').val('');
 }
 //投稿情報取得
-function getContribution(funcname, threadName, startmsgnum, endmsgnum) {
+function getContribution(funcname, startmsgnum, endmsgnum) {
   var url = url_host + "chaincode";
+  //既存の投稿を削除
+  $('#BoardTable').empty();
+
+  var funcname = "GetContribution";
+  var threadID = getthreadID();
+  var threadName = getthreadName();
+
   //ユーザー名を設定
   var user_name = window.sessionStorage.getItem(['USER_NAME']);
-  var JSONdata = createJSONdataForBoardApp("query", funcname, threadName, startmsgnum, endmsgnum, user_name, "", 5);
+  var JSONdata = createJSONdataForBoardApp("query", funcname, threadID, threadName,
+   startmsgnum, endmsgnum, user_name, "", 5);
+  console.log(JSONdata);
   executeJsonRpc(url, JSONdata,
     function success(data) {
       contributionList = JSON.parse(data.result.message);
       var getstartmsgnum = 0;
       var getendmsgnum = 0;
+      console.log(contributionList);
       if (contributionList.toString() != "[{No Contribution.}]") {
         //投稿情報の開始番号を設定
         getstartmsgnum = contributionList[0].msgnumber;
@@ -111,7 +116,7 @@ function getContribution(funcname, threadName, startmsgnum, endmsgnum) {
         for (var i = 0; i < contributionList.length; i++) {
           // スレッド情報の取得
           var contribution = contributionList[i];
-          if (contribution.threadName == "") {
+          if (contribution.userID == "") {
             break;
           }
           //### HTML編集 table行の追加、編集 ここから ###
@@ -148,7 +153,8 @@ function getContribution(funcname, threadName, startmsgnum, endmsgnum) {
 }
 
 //JSONメッセージ生成
-function createJSONdataForBoardApp(method, functionName, threadName, startmsgnum, endmsgnum, user_name, message, id) {
+function createJSONdataForBoardApp(method, functionName, threadID, threadName,
+   startmsgnum, endmsgnum, user_name, message, id) {
   var ccId = window.sessionStorage.getItem(['CCID']);
   var user_name = window.sessionStorage.getItem(['USER_NAME']);
   var JSONdata = {
@@ -160,6 +166,7 @@ function createJSONdataForBoardApp(method, functionName, threadName, startmsgnum
         function: functionName,
         args: [
           threadName,
+          threadID,
           startmsgnum,
           endmsgnum,
           user_name,

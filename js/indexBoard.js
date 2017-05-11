@@ -29,7 +29,7 @@ function AddThread() {
 //スレッド一覧作成
 function getThreadList() {
   var url = url_host + "chaincode";
-  var JSONdata = createJSONdataForThread("query", "RefreshThreadList", [], 5);
+  var JSONdata = createJSONdataForThread("query", "GetThread", [], 5);
   executeJsonRpc(url, JSONdata,
     function success(data) {
       var threadList = JSON.parse(data.result.message);
@@ -40,7 +40,7 @@ function getThreadList() {
         var temp = "";
         temp += "<tr>";
         temp += "<td width=\"50\">" + (i + 1) + "</td>";
-        temp += "<td id=\"ThreadName\" width=\"200\"><a href=#>" + thread.threadName + "</a></td>";
+        temp += "<td id=\"" + thread.threadId + "\" width=\"200\"><a id=\"" + thread.threadId + "\"href=#>" + thread.threadName + "</a></td>";
         temp += "<td width=\"50\">" + thread.msgnumber + "</td>";
         temp += "</tr>";
 
@@ -82,7 +82,9 @@ function createJSONdataForThread(method, functionName, args, id) {
 
 $(function(){
   $("#ThreadTBL tbody").click(function(e){
+      var threadid = e.target.id;
       var threadname = e.target.innerText;
+      window.sessionStorage.setItem(['ThreadId'], [threadid]);
       window.sessionStorage.setItem(['ThreadName'], [threadname]);
       window.location.href = "Thread.html";
   });
