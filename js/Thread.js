@@ -102,13 +102,13 @@ function getContribution(startmsgnum, endmsgnum) {
   var user_name = window.sessionStorage.getItem(['USER_NAME']);
   var JSONdata = createJSONdataForBoardApp("query", funcname, threadID, threadName,
    startmsgnum, endmsgnum, user_name, "", 5);
-  console.log(JSONdata);
+  // console.log(JSONdata);
   executeJsonRpc(url, JSONdata,
     function success(data) {
       DataList = JSON.parse(data.result.message);
       var getstartmsgnum = 0;
       var getendmsgnum = 0;
-      console.log(DataList);
+      // console.log(DataList);
       if (DataList.toString() != "[{No Contribution.}]") {
         //投稿情報の開始番号を設定
         getstartmsgnum = DataList[0].msgnumber;
