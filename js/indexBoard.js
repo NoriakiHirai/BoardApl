@@ -67,12 +67,16 @@ function createJSONdataForThread(method, functionName, args, id) {
   return JSONdata;
 }
 
+// スレッドIDをセッション変数に格納
+function setId(threadid) {
+          var strThreadId = threadid + "";
+          window.sessionStorage.setItem(['ThreadId'], [strThreadId]);
+}
+
+// スレッド名をセッション変数に格納
 $(function(){
   $("#ThreadTBL tbody").click(function(e){
-      var threadid = e.target.id;
       var threadname = e.target.innerText;
-      window.sessionStorage.setItem(['ThreadId'], [threadid]);
       window.sessionStorage.setItem(['ThreadName'], [threadname]);
-      window.location.href = "Thread.html";
   });
 });

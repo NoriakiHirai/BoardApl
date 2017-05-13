@@ -26,7 +26,7 @@ function make1layerTable(DataList) {
     var temp = "";
     temp += "<tr>";
     temp += "<td width=\"50\">" + (i + 1) + "</td>";
-    temp += "<td id=\"" + thread.threadId + "\" width=\"200\"><a id=\"" + thread.threadId + "\"href=#>" + thread.threadName + "</a></td>";
+    temp += "<td width=\"200\"><a href=\"Thread.html\" onClick=\"setId(" + thread.threadId + ")\">" + thread.threadName + "</a></td>";
     temp += "<td width=\"50\">" + thread.msgnumber + "</td>";
     temp += "</tr>";
 
